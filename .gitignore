@@ -1,0 +1,43 @@
+src/*
+!src/.gitkeep
+
+.channels/
+.depdb
+.depdblock
+.filemap
+.lock
+.registry/
+
+# VCS files
+.svn
+.git
+.idea
+tags
+
+# Temporal files
+.cache/*
+*.bak
+*.log
+*.sql
+*.swp
+*~
+*.__*
+
+# Apple Gabages
+*.DS_Store
+*._.DS_Store
+Thumbs.db
+
+# Enbironmental file
+.my.cnf
+.env
+
+# Project specific files
+site-lock
+
+# service
+.service_running
+
+src/
+var/
+

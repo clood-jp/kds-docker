@@ -1,0 +1,115 @@
+version: "3"
+volumes:
+  kds_log:
+    driver: local
+  kds_cache:
+    driver: local
+services:
+  db1:
+    image: mysql:5.7
+    #command: ["--default-authentication-plugin=mysql_native_password"]
+    command: ["--sql-mode=NO_ENGINE_SUBSTITUTION"]
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: kds
+      MYSQL_USER: kds
+      MYSQL_PASSWORD: kds
+      #restart: always
+
+  db2:
+    image: mysql:5.7
+    #command: ["--default-authentication-plugin=mysql_native_password"]
+    command: ["--sql-mode=NO_ENGINE_SUBSTITUTION"]
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: wordpress
+    restart: always
+
+#
+  nginx:
+    build:
+      context: ./containers/nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./containers/nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./containers/nginx/nginx.conf:/etc/nginx/nginx.conf
+#      - ./var/log/nginx/error.log:/var/log/nginx/error.log
+#      - ./var/log/nginx/access.log:/var/log/nginx/access.log
+#      - ./src/kds_wp/web:/var/www/html/web
+      - ./src/kds/web:/var/www/html/kds
+    depends_on:
+      - wordpress
+      - kds
+
+  kds:
+    build:
+      context: ./containers/symfony
+    environment:
+      - PROJECT_DOMAIN="${PROJECT_DOMAIN}:8080"
+      - PROJECT_ENV=dev
+      - WRITABLE_USER_GROUP=www-data
+
+      - MYSQL_HOST=db1
+      - MYSQL_USER=kds
+      - MYSQL_PWD=kds
+      - MYSQL_DATABASE=kds
+
+      - REMOTE_HOST=www.kyoto-ds.net
+      - REMOTE_PORT=22
+      - REMOTE_USER=ubuntu
+      - REMOTE_PROJECT_ROOT=projects/
+      - REMOTE_BACKUP_FILE=backup//current.sql.gz
+
+      - BACKUP_DIR=~/backup/
+      - KEEPDAY=25
+
+      - MAIL_STRATEGY=none
+
+      - MAIL_SMTP_HOST=""
+      - MAIL_SMTP_PORT=""
+      - MAIL_SMTP_ENCRYPTION=tls
+      - MAIL_SMTP_USER=""
+      - MAIL_SMTP_PASSWORD=""
+
+      - MAIL_POP3_PASSWORD=""
+
+      - FAKE_DELIVERY_STATUS=1
+      - PROD_LOGGING_ENABLED=1
+
+      - CRON_ENABLED=0
+      - DISABLE_SSL=0
+      - MAIL_ADDRESS=info@kyoto-ds.net
+
+    volumes:
+      - ./src/kds:/var/www/html
+      - kds_log:/var/www/html/log
+      - kds_cache:/var/www/html/cache
+    command: bash -c "touch .my.cnf && bin/deploy -a && bin/db_load_fixtures -f && php-fpm"
+    depends_on:
+      - db1
+
+  wordpress:
+    #    image: wordpress:php7.3-fpm
+    build:
+      context: ./containers/wordpress
+    environment:
+      - WORDPRESS_DB_HOST=db2:3306
+      - WORDPRESS_DB_NAME=wordpress
+      - WORDPRESS_DB_USER=wordpress
+      - WORDPRESS_DB_PASSWORD=wordpress
+      - api_path=/api/
+      - disable_ssl=1
+      - mail_address=dummy@kyoto-ds.net
+      - order_mail_address=dummy@kyoto-ds.net
+      - project_domain=localhost:8080
+      - smtp_password=hogehoge
+    #working_dir: /var/www/html
+    command: bash -c "bin/deploy && php-fpm"
+    volumes:
+      - ./src/kds-wp:/var/www/html
+    depends_on:
+      - db2
+

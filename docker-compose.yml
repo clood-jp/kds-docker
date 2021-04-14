@@ -52,10 +52,10 @@ services:
       - PROJECT_ENV=dev
       - WRITABLE_USER_GROUP=www-data
 
-      - MYSQL_HOST=db1
-      - MYSQL_USER=kds
-      - MYSQL_PWD=kds
-      - MYSQL_DATABASE=kds
+      - DB_HOST=db1
+      - DB_USER=kds
+      - DB_PASSWORD=kds
+      - DB_NAME=kds
 
       - REMOTE_HOST=www.kyoto-ds.net
       - REMOTE_PORT=22
@@ -68,11 +68,11 @@ services:
 
       - MAIL_STRATEGY=none
 
-      - MAIL_SMTP_HOST=""
-      - MAIL_SMTP_PORT=""
+      - MAIL_SMTP_HOST="dummy"
+      - MAIL_SMTP_PORT="dummy"
       - MAIL_SMTP_ENCRYPTION=tls
-      - MAIL_SMTP_USER=""
-      - MAIL_SMTP_PASSWORD=""
+      - MAIL_SMTP_USERNAME="dummy"
+      - MAIL_SMTP_PASSWORD="dummy"
 
       - MAIL_POP3_PASSWORD=""
 
@@ -80,7 +80,7 @@ services:
       - PROD_LOGGING_ENABLED=1
 
       - CRON_ENABLED=0
-      - DISABLE_SSL=0
+      - DISABLE_SSL=1
       - MAIL_ADDRESS=info@kyoto-ds.net
 
     volumes:
@@ -104,7 +104,7 @@ services:
       - disable_ssl=1
       - mail_address=dummy@kyoto-ds.net
       - order_mail_address=dummy@kyoto-ds.net
-      - project_domain=localhost:8080
+      - project_domain="${PROJECT_DOMAIN}:8080"
       - smtp_password=hogehoge
     #working_dir: /var/www/html
     command: bash -c "bin/deploy && php-fpm"
